@@ -1,4 +1,4 @@
-# SLAM-Kit.ai Landing Page
+# SLAM-Labs.ai Landing Page
 
 A high-conversion landing page for a Series A robotics startup offering No-Code Robotics-as-a-Service (RaaS) platform.
 
