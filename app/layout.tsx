@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SLAM-Kit.ai | No-Code Robotics-as-a-Service",
-  description: "From Scan to Action in 60 Seconds. The first No-Code, Edge-Native brain for industrial robots.",
-  keywords: ["robotics", "automation", "AI", "machine learning", "industrial robotics", "RaaS"],
+  title: "slamlabs.ai",
+  description: "Building...",
 };
 
 export default function RootLayout({
