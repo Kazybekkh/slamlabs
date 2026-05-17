@@ -16,3 +16,200 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* ─── stealth assembly scene ─────────────────────────────────── */
+
+.scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0) 2px,
+    rgba(255, 255, 255, 0.018) 3px,
+    rgba(255, 255, 255, 0) 4px
+  );
+}
+
+/* ─── articulated arm motion ──────────────────────────────────
+   10s cycle (slowed for clarity):
+   00–08%   idle, grippers hold droid arms at rest
+   08–34%   robot arms swing IN toward droid, parts visibly carried along
+   34–46%   ATTACHMENT — sparks, carried→attached crossfade at the slot
+   46–58%   robot arms hold near droid (showing fresh weld)
+   58–78%   robot arms retract back to vertical (empty)
+   78–92%   droid complete, eyes blink on
+   92–100%  reset
+
+   NOTE on rotation signs:
+   In SVG/CSS, a positive rotate() angle is clockwise on screen.
+   For an arm pointing DOWN (elbow at 6 o'clock), clockwise rotation
+   swings the elbow LEFT (toward 7-8 o'clock).
+   So:
+     LEFT arm needs NEGATIVE rotation to swing RIGHT toward droid.
+     RIGHT arm needs POSITIVE rotation to swing LEFT toward droid.
+*/
+
+.arm-left,
+.arm-left-fore,
+.arm-right,
+.arm-right-fore,
+.gripper-claws-left,
+.gripper-claws-right {
+  animation-duration: 10s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.arm-left       { animation-name: arm-left-shoulder; }
+.arm-left-fore  { animation-name: arm-left-elbow; }
+.arm-right      { animation-name: arm-right-shoulder; }
+.arm-right-fore { animation-name: arm-right-elbow; }
+
+/* Shoulder and elbow rotate by equal-and-opposite amounts so the FOREARM
+   stays vertical — gripper sweeps an arc and lands at droid shoulder while
+   the carried arm (child of gripper) stays upright the whole journey. */
+@keyframes arm-left-shoulder {
+  0%, 8%, 100%  { transform: rotate(0deg); }
+  22%           { transform: rotate(-50deg); }
+  34%, 58%      { transform: rotate(-65deg); }
+  46%           { transform: rotate(-63deg); }
+  78%, 92%      { transform: rotate(0deg); }
+}
+@keyframes arm-left-elbow {
+  0%, 8%, 100%  { transform: rotate(0deg); }
+  22%           { transform: rotate(50deg); }
+  34%, 58%      { transform: rotate(65deg); }
+  46%           { transform: rotate(63deg); }
+  78%, 92%      { transform: rotate(0deg); }
+}
+@keyframes arm-right-shoulder {
+  0%, 8%, 100%  { transform: rotate(0deg); }
+  22%           { transform: rotate(50deg); }
+  34%, 58%      { transform: rotate(65deg); }
+  46%           { transform: rotate(63deg); }
+  78%, 92%      { transform: rotate(0deg); }
+}
+@keyframes arm-right-elbow {
+  0%, 8%, 100%  { transform: rotate(0deg); }
+  22%           { transform: rotate(-50deg); }
+  34%, 58%      { transform: rotate(-65deg); }
+  46%           { transform: rotate(-63deg); }
+  78%, 92%      { transform: rotate(0deg); }
+}
+
+/* gripper closes during weld, opens during retract — applies to claws only,
+   so the carried arm (sibling of claws) doesn't get squished. */
+.gripper-claws-left,
+.gripper-claws-right {
+  animation-name: gripper-pinch;
+}
+@keyframes gripper-pinch {
+  0%, 8%, 100%      { transform: scaleX(0.85); }
+  20%               { transform: scaleX(0.78); }
+  34%, 42%          { transform: scaleX(0.6); }
+  52%               { transform: scaleX(0.95); }
+  60%, 80%          { transform: scaleX(1); }
+}
+
+/* ─── carried droid arms ─────────────────────────────────────
+   These are siblings of the robot arms (NOT children), so they don't
+   inherit rotations. Their motion is a direct translate from "near gripper
+   at rest" to "exactly overlapping the droid arm slot" at the peak.
+
+   LEFT carried arm rest at (133-147, 240-300), translates by (+59, -46)
+   to land at (192-206, 194-254) — exact overlap with attached arm.
+*/
+
+/* Carried arms are now CHILDREN of the grippers, so they physically follow
+   the gripper's exact arc. We just need opacity timing for the handoff. */
+.carried-arm-left,
+.carried-arm-right {
+  animation: carry-arm-fade 10s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes carry-arm-fade {
+  0%, 6%        { opacity: 1; }   /* held in place at rest */
+  44%           { opacity: 1; }   /* still held just before weld */
+  48%           { opacity: 0; }   /* fade out — handed off to droid */
+  92%           { opacity: 0; }
+  98%, 100%     { opacity: 1; }   /* reappear in the gripper for the next cycle */
+}
+
+/* ─── attached droid arms (final, on droid body) ───────────── */
+
+.droid-arm-left-attached,
+.droid-arm-right-attached {
+  animation: attached-arm 10s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes attached-arm {
+  0%, 42%   { opacity: 0; }
+  48%, 90%  { opacity: 1; }
+  96%, 100% { opacity: 0; }
+}
+
+/* ─── droid eyes blink on when complete ─────────────────────── */
+
+.droid-eye {
+  animation: droid-eye-blink 10s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(250, 250, 250, 0.6));
+  opacity: 0;
+}
+@keyframes droid-eye-blink {
+  0%, 76%   { opacity: 0; }
+  78%, 84%  { opacity: 1; }
+  85%, 86%  { opacity: 0; }
+  87%, 92%  { opacity: 1; }
+  93%, 100% { opacity: 0; }
+}
+
+/* ─── welding sparks (fire at attachment moment) ────────────── */
+
+.spark {
+  opacity: 0;
+  filter: drop-shadow(0 0 2px #ffffff);
+  animation: spark-flash 10s ease-in-out infinite;
+}
+.spark-1 { animation-delay: 0s; }
+.spark-2 { animation-delay: 0.15s; }
+.spark-3 { animation-delay: 0.3s; }
+.spark-4 { animation-delay: 0.05s; }
+.spark-5 { animation-delay: 0.2s; }
+.spark-6 { animation-delay: 0.35s; }
+
+@keyframes spark-flash {
+  0%, 34%, 54%, 100% { opacity: 0; transform: scale(0.5); }
+  37%                { opacity: 1; transform: scale(1.6); }
+  40%                { opacity: 0; transform: scale(0.5); }
+  43%                { opacity: 0.95; transform: scale(1.3); }
+  46%                { opacity: 0; transform: scale(0.5); }
+  50%                { opacity: 0.8; transform: scale(1.1); }
+  53%                { opacity: 0; transform: scale(0.5); }
+}
+
+/* ─── blinking terminal cursor ──────────────────────────────── */
+
+.cursor {
+  display: inline-block;
+  margin-left: 0.15em;
+  animation: cursor-blink 1.05s steps(1, end) infinite;
+}
+@keyframes cursor-blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* ─── reduced motion ────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .arm-left, .arm-left-fore,
+  .arm-right, .arm-right-fore,
+  .gripper-claws-left, .gripper-claws-right,
+  .carried-arm-left, .carried-arm-right,
+  .droid-arm-left-attached, .droid-arm-right-attached,
+  .droid-eye, .spark, .cursor {
+    animation: none !important;
+  }
+  .carried-arm-left, .carried-arm-right { opacity: 0 !important; }
+  .droid-arm-left-attached, .droid-arm-right-attached { opacity: 1 !important; }
+  .droid-eye { opacity: 1 !important; }
+}
